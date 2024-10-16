@@ -21,6 +21,22 @@ Route::add('/', function() {
   echo 'Hello world!';
 });
 
+
+Route::add('/login', function() {
+
+
+
+
+
+
+  
+
+}, 'post');
+
+
+
+
+
 //ścieżka wyświetla dane dotyczące rachunku bankowego po jego numerze
 //jeżeli ktoś zapyta API o /account/1234 to zwróci dane rachunku o numerze 1234
 //klasa Route podstawia argumenty z URL (wyrażenie regularne) do funkcji
