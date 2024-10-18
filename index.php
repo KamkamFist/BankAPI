@@ -4,6 +4,8 @@
 require_once('Route.php');
 //model odpowiadający za tabelę account w bazie danych - umożliwia operacje na rachunkach
 require_once('model/account.php');
+require_once('model/user.php');
+require_once('model/token.php');
 //połączenie do bazy danych
 //TODO: wyodrębnić zmienne dotyczące środowiska do pliku konfiguracyjnego
 $db = new mysqli('localhost', 'root', '', 'bankAPI');
@@ -24,12 +26,7 @@ Route::add('/', function() {
 
 Route::add('/login', function() {
 
-
-
-
-
-
-  
+  return var_dump($_POST);
 
 }, 'post');
 
