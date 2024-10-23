@@ -9,12 +9,14 @@ require_once('model/token.php');
 //połączenie do bazy danych
 //TODO: wyodrębnić zmienne dotyczące środowiska do pliku konfiguracyjnego
 $db = new mysqli('localhost', 'root', '', 'bankAPI');
+$db->set_charset('utf8');
 //ustawienie kodowania znaków na utf8 dla bazy danych
 $db->set_charset('utf8');
 
 //użyj przestrzeni nazw od klasy routingu i od naszej klasy od rachunków
 use Steampixel\Route;
 use BankAPI\Account;
+use BankAPI\User;
 
 //jeśli ktoś zapyta API bez żadnego parametru
 //zwróć hello world
@@ -24,9 +26,25 @@ Route::add('/', function() {
 });
 
 
-Route::add('/login', function() {
+Route::add('/login', function() use ($db) {
 
-  return var_dump($_POST);
+$data = file_get_contents("php://input");
+$data = json_decode($data, true);
+//var_dump($data);
+$ip = $_SERVER['REMOTE_ADDR'];
+try{
+  $user_id = User::login($data['login'], $data['password'], $db);
+  $token = Token::new($ip, $user_id, $db);
+  header('Content-Type: application/json');
+  echo json_encode(['token' => $token]);
+} catch(Exception) {
+  header('HTTP/1.1 401 Unauthorized');
+  echo json_encode(['error' => 'Invalid login or password']);
+  return;
+}
+
+
+  //return var_dump($_POST);
 
 }, 'post');
 

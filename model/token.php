@@ -4,7 +4,7 @@
 class Token {
     static function new(string $ip, int $user_id, mysqli $db) : string {
         $hash = hash('sha256', $ip . $user_id . time());
-        $sql = "INSERT INTO token (token, ip, user_id) VALUES (?, ?)";
+        $sql = "INSERT INTO token (token, ip, user_id) VALUES (?, ?, ?)";
         $query = $db->prepare($sql);
         $query->bind_param('ssi', $hash, $ip, $user_id);
 
