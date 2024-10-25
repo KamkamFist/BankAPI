@@ -48,7 +48,28 @@ try{
 
 }, 'post');
 
+Route::add('/account/details', function() use ($db) {
 
+  $data = file_get_contents("php://input");
+  $dataArray = json_decode($data, true);
+  //var_dump($data);
+  $ip = $_SERVER['REMOTE_ADDR'];
+
+$token = $dataArray['token'];
+
+if(!Token::check($token, $ip, $db)){
+  header('HTTP/1.1 401 Unauthorized');
+  echo json_encode(['error' => 'Invalid token']);
+  return;
+}
+
+$user_id = Token::getUserData($token, $ip, $db);
+  
+  echo $user_id;
+
+
+
+  }, 'post');
 
 
 

@@ -21,12 +21,27 @@ class Token {
         $query->bind_param('ss', $token, $ip);
         $query->execute();
         $result = $query->get_result();
+        $data = $result->fetch_assoc();
         if($result->num_rows == 0){
             return false;
         }else{
             return true;
         }
     }
+
+    static function getUserData($token, $db) : int{
+        $sql = "SELECT * FROM token WHERE token = ? ORDER BY id DESC LIMIT 1";
+        $query = $db->prepare($sql);
+        $query->bind_param('s', $token);
+        $query->execute();
+        $result = $query->get_result();
+  if($result->num_rows == 0){
+            throw new Exception('Invalid token');   
+        }else{
+            $data = $result->fetch_assoc();
+            return $data['user_id'];
+    }
+}
 }
 
 

@@ -16,6 +16,7 @@ class Account {
         $this->amount = $amount;
         $this->name = $name;
     }
+    
 
     //tworzy nowy obiekt na podstawie numeru rachunku pobierając dane z bazy
     //metoda statyczna - nie trzeba tworzyć obiektu klasy żeby jej użyć
