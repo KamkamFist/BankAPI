@@ -63,14 +63,13 @@ if(!Token::check($token, $ip, $db)){
   return;
 }
 
-$user_id = Token::getUserData($token, $ip, $db);
+$user_id = Token::getUserData($token, $db);
   
-  echo $user_id;
-
-
-
-  }, 'post');
-
+$accountNo = Account::getAccountNo($user_id, $db);
+$account = Account::getAccount($accountNo, $db);
+header('Content-Type: application/json');
+return json_encode($account->getArray());
+}, 'post');
 
 
 //ścieżka wyświetla dane dotyczące rachunku bankowego po jego numerze
