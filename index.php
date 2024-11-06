@@ -85,6 +85,20 @@ Route::add('/account/([0-9]*)', function($accountNo) use($db) {
     return json_encode($account->getArray());
 });
 
+
+Route::add('/transfer/new', function() use($db) {
+  $data = file_get_contents("php://input");
+  $dataArray = json_decode($data, true);
+  //var_dump($data);
+  $token = $dataArray['token'];
+  if(!Token::check($token, $_SERVER['REMOTE_ADDR'], $db)){
+    header('HTTP/1.1 401 Unauthorized');
+    echo json_encode(['error' => 'Invalid token']);
+    return;
+  }
+
+}, 'post');
+
 //ta linijka musi być na końcu
 //musi tu być nazwa folderu w którym "mieszka" API
 Route::run('/bankAPI');
