@@ -6,6 +6,7 @@ require_once('Route.php');
 require_once('model/account.php');
 require_once('model/user.php');
 require_once('model/token.php');
+require_once('model/transfer.php');
 //połączenie do bazy danych
 //TODO: wyodrębnić zmienne dotyczące środowiska do pliku konfiguracyjnego
 $db = new mysqli('localhost', 'root', '', 'bankAPI');
@@ -94,9 +95,15 @@ Route::add('/transfer/new', function() use($db) {
   if(!Token::check($token, $_SERVER['REMOTE_ADDR'], $db)){
     header('HTTP/1.1 401 Unauthorized');
     echo json_encode(['error' => 'Invalid token']);
-    return;
+    return; 
   }
-
+  $user_id = Token::getUserData($token, $db);
+  $source = Account::getAccountNo($user_id, $db);
+  $target = $dataArray['target'];
+  $amount = $dataArray['amount'];
+  Transfer::new($source, $target, $amount, $db);
+  header('Statusd: 200 OK');
+  echo json_encode(['status' => 'OK']);
 }, 'post');
 
 //ta linijka musi być na końcu
