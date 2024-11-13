@@ -96,14 +96,19 @@ Route::add('/transfer/new', function() use($db) {
     header('HTTP/1.1 401 Unauthorized');
     echo json_encode(['error' => 'Invalid token']);
     return; 
-  }
+  } 
   $user_id = Token::getUserData($token, $db);
   $source = Account::getAccountNo($user_id, $db);
   $target = $dataArray['target'];
   $amount = $dataArray['amount'];
-  Transfer::new($source, $target, $amount, $db);
-  header('Statusd: 200 OK');
-  echo json_encode(['status' => 'OK']);
+
+  if(Transfer::new($source, $target, $amount, $db) == true){
+    header('Statusd: 200 OK');
+    echo json_encode(['status' => 'OK']);
+  }
+  if(Transfer::new($source, $target, $amount, $db) == false){
+    echo json_encode('error, Transfer failed');
+  }
 }, 'post');
 
 //ta linijka musi być na końcu
