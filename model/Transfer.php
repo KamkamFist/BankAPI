@@ -53,7 +53,7 @@ class Transfer
                 }
             }
         } else {
-            throw new Exception('Invalid amount');
+            return false;
         }
     }
 }
