@@ -35,6 +35,7 @@ class Transfer
                     //przygotuj zapytanie
                     $query = $db->prepare($sql);
                     //podmień znaki zapytania na zmienne
+                    $amount = $amount / 2;
                     $query->bind_param('ii', $amount, $source);
                     //wykonaj zapytanie
                     $query->execute();
