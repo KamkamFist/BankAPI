@@ -7,6 +7,10 @@ require_once('model/account.php');
 require_once('model/user.php');
 require_once('model/token.php');
 require_once('model/transfer.php');
+require_once('class/LoginRequest.php');
+require_once('class/LoginResponse.php');
+require_once('class/AccountDetailsRequest.php');
+require_once('class/AccountDetailsResponse.php');
 //połączenie do bazy danych
 //TODO: wyodrębnić zmienne dotyczące środowiska do pliku konfiguracyjnego
 $db = new mysqli('localhost', 'root', '', 'bankAPI');
@@ -20,6 +24,10 @@ use BankAPI\Account;
 use BankAPI\User;
 use BankAPI\Transfer;
 use BankAPI\Token;
+use BankAPI\LoginRequest;
+use BankAPI\LoginResponse;
+use BankAPI\AccountDetailsRequest; 
+use BankAPI\AccountDetailsResponse;
 
 //jeśli ktoś zapyta API bez żadnego parametru
 //zwróć hello world
@@ -30,21 +38,21 @@ Route::add('/', function() {
 
 
 Route::add('/login', function() use ($db) {
-
-$data = file_get_contents("php://input");
-$data = json_decode($data, true);
-//var_dump($data);
-$ip = $_SERVER['REMOTE_ADDR'];
-try{
-  $user_id = User::login($data['login'], $data['password'], $db);
-  $token = Token::new($ip, $user_id, $db);
-  header('Content-Type: application/json');
-  echo json_encode(['token' => $token]);
-} catch(Exception) {
-  header('HTTP/1.1 401 Unauthorized');
-  echo json_encode(['error' => 'Invalid login or password']);
-  return;
-}
+  $request = new LoginRequest(); 
+  try {
+    //spróbuj zalogować użytkownika
+    $id = User::login($request->getLogin(), $request->getPassword(), $db);
+    //wygeneruj nowy token dla tego użytkownika i tego IP
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $token = Token::new($ip, $id, $db);
+     //stwórz obiekt odpowiedzi
+     $response = new LoginResponse($token, "");
+    $response = new LoginResponse("", "");
+    $response->send();
+   } catch (Exception $e) {$response = new LoginResponse("", $e->getMessage());
+    $response->send();
+    return;
+  }
 
 
   //return var_dump($_POST);
@@ -53,6 +61,7 @@ try{
 
 Route::add('/account/details', function() use ($db) {
 
+  $response = new AccountDetailsResponse();
   $data = file_get_contents("php://input");
   $dataArray = json_decode($data, true);
   //var_dump($data);
@@ -61,9 +70,7 @@ Route::add('/account/details', function() use ($db) {
 $token = $dataArray['token'];
 
 if(!Token::check($token, $ip, $db)){
-  header('HTTP/1.1 401 Unauthorized');
-  echo json_encode(['error' => 'Invalid token']);
-  return;
+  $response->setError('Invalid token');
 }
 
 $user_id = Token::getUserData($token, $db);
@@ -83,10 +90,10 @@ Route::add('/account/([0-9]*)', function($accountNo) use($db) {
     //funkcja statyczna pobiera informacje o rachunku z bazy danych i tworzy obiekt rachunku
     $account = Account::getAccount($accountNo, $db);
     //ustaw nagłówek odpowiedzi na JSON żeby przeglądarka wiedziała jak interpretować dane
-    header('Content-Type: application/json');
-    //zwróć dane w formacie JSON korzystając z funkcji udostępniającej dane prywatne jako tablicę
-    return json_encode($account->getArray());
-});
+    $response->setAccount($account->getArray());
+    //wysyłamy odpowiedź
+    $response->send();
+}, 'post');
 
 
 Route::add('/transfer/new', function() use($db) {
