@@ -47,7 +47,6 @@ Route::add('/login', function() use ($db) {
     $token = Token::new($ip, $id, $db);
      //stwórz obiekt odpowiedzi
      $response = new LoginResponse($token, "");
-    $response = new LoginResponse("", "");
     $response->send();
    } catch (Exception $e) {$response = new LoginResponse("", $e->getMessage());
     $response->send();
@@ -59,41 +58,40 @@ Route::add('/login', function() use ($db) {
 
 }, 'post');
 
-Route::add('/account/details', function() use ($db) {
-
+Route::add('/account/details', function() use($db) {
+    
+  $request = new AccountDetailsRequest();
   $response = new AccountDetailsResponse();
-  $data = file_get_contents("php://input");
-  $dataArray = json_decode($data, true);
-  //var_dump($data);
-  $ip = $_SERVER['REMOTE_ADDR'];
-
-$token = $dataArray['token'];
-
-if(!Token::check($token, $ip, $db)){
-  $response->setError('Invalid token');
-}
-
-$user_id = Token::getUserData($token, $db);
-  
-$accountNo = Account::getAccountNo($user_id, $db);
-$account = Account::getAccount($accountNo, $db);
-header('Content-Type: application/json');
-return json_encode($account->getArray());
+  //sprawdz poprawność tokena
+  if(!Token::check($request->getToken(), $_SERVER['REMOTE_ADDR'], $db)) {
+      //jeżeli token jest niepoprawny to zapisz błąd w odpowiedzi
+      $response->setError('Invalid token');
+  }
+  //pobierz id użytkownika na podstawie tokena
+  $userId = Token::getUserId($request->getToken(), $db);
+  //wyciągamy numer rachunku i zwracamy go jako json
+  $accountNo = Account::getAccountNo($userId, $db);
+  $account = Account::getAccount($accountNo, $db);
+  //ładujemy dane o koncie do odpowiedzi
+  $response->setAccount($account->getArray());
+  //wysyłamy odpowiedź
+  $response->send();
 }, 'post');
+
 
 
 //ścieżka wyświetla dane dotyczące rachunku bankowego po jego numerze
 //jeżeli ktoś zapyta API o /account/1234 to zwróci dane rachunku o numerze 1234
 //klasa Route podstawia argumenty z URL (wyrażenie regularne) do funkcji
 Route::add('/account/([0-9]*)', function($accountNo) use($db) {
-    //$accountNo to numer rachunku, którego dane chcę pobrać z bazy
-    //funkcja statyczna pobiera informacje o rachunku z bazy danych i tworzy obiekt rachunku
-    $account = Account::getAccount($accountNo, $db);
-    //ustaw nagłówek odpowiedzi na JSON żeby przeglądarka wiedziała jak interpretować dane
-    $response->setAccount($account->getArray());
-    //wysyłamy odpowiedź
-    $response->send();
-}, 'post');
+  //$accountNo to numer rachunku, którego dane chcę pobrać z bazy
+  //funkcja statyczna pobiera informacje o rachunku z bazy danych i tworzy obiekt rachunku
+  $account = Account::getAccount($accountNo, $db);
+  //ustaw nagłówek odpowiedzi na JSON żeby przeglądarka wiedziała jak interpretować dane
+  header('Content-Type: application/json');
+  //zwróć dane w formacie JSON korzystając z funkcji udostępniającej dane prywatne jako tablicę
+  return json_encode($account->getArray());
+});
 
 
 Route::add('/transfer/new', function() use($db) {
@@ -106,7 +104,7 @@ Route::add('/transfer/new', function() use($db) {
     echo json_encode(['error' => 'Invalid token']);
     return; 
   } 
-  $user_id = Token::getUserData($token, $db);
+  $user_id = Token::getUserId($token, $db);
   $source = Account::getAccountNo($user_id, $db);
   $target = $dataArray['target'];
   $amount = $dataArray['amount'];

@@ -69,4 +69,22 @@ class Transfer
             return false;
         }
     }
+public static function getTransferHistory(mysqli $db): array
+{
+    try {
+        // Pobierz historię przelewów z bazy danych
+        $sql = "SELECT * FROM transfer";
+        // Przygotuj zapytanie
+        $query = $db->prepare($sql);
+        // Wykonaj zapytanie
+        $query->execute();
+        // Pobierz wyniki zapytania
+        $result = $query->get_result();
+        // Zwróć wyniki jako tablicę
+        return $result->fetch_all(MYSQLI_ASSOC);
+    } catch (mysqli_sql_exception $e) {
+        // Rzuć wyjątek w przypadku błędu
+        throw new Exception('Failed to fetch transfer history');
+    }
+}
 }
