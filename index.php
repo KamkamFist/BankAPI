@@ -11,6 +11,8 @@ require_once('class/LoginRequest.php');
 require_once('class/LoginResponse.php');
 require_once('class/AccountDetailsRequest.php');
 require_once('class/AccountDetailsResponse.php');
+require_once('class/TransferRequest.php');
+require_once('class/TransferResponse.php');
 //połączenie do bazy danych
 //TODO: wyodrębnić zmienne dotyczące środowiska do pliku konfiguracyjnego
 $db = new mysqli('localhost', 'root', '', 'bankAPI');
@@ -28,6 +30,8 @@ use BankAPI\LoginRequest;
 use BankAPI\LoginResponse;
 use BankAPI\AccountDetailsRequest; 
 use BankAPI\AccountDetailsResponse;
+use BankAPI\TransfersRequest;
+use BankAPI\TransfersResponse;
 
 //jeśli ktoś zapyta API bez żadnego parametru
 //zwróć hello world
@@ -35,6 +39,29 @@ use BankAPI\AccountDetailsResponse;
 Route::add('/', function() {
   echo 'Hello world!';
 });
+
+Route::add('/transfer/history', function() use($db) {
+  $request = new TransfersRequest();
+  $response = new TransfersResponse();
+
+  // Sprawdzanie poprawności tokena
+  if (!Token::check($request->getToken(), $_SERVER['REMOTE_ADDR'], $db)) {
+      $response->setError('Invalid token');
+      $response->send();
+      return;
+  }
+
+  $userId = Token::getUserId($request->getToken(), $db);
+
+  $accountNo = Account::getAccountNo($userId, $db);
+
+  $transfers = Transfer::getTransferHistory($accountNo, $db);
+
+  $response->setTransfers($transfers);
+
+  $response->send();
+}, 'post');
+
 
 
 Route::add('/login', function() use ($db) {
